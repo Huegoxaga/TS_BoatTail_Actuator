@@ -16,6 +16,13 @@
   *
   ******************************************************************************
   */
+/* CODER BEWARE
+ * The code contained within these scripts is managed in part by the STM32 Code Auto Generator
+ * Any code that is not contained within sections that start with USER CODE START and end
+ * in USER CODE END will be erased by the Code Auto Generator. Code can appear if deleted
+ *  based on the Code Auto Generators settings. If the GPS stops working, try looking for GNSS_Process()
+ *  in the main while loop of this script as it will appear automatically when the Code Auto Generation feature
+ *  is used. This goes for all '.c' and '.h' files.*/
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -43,6 +50,7 @@
 CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN PV */
+/* CAN Peripheral Data Struct Setup Start */
 CAN_FilterTypeDef sFilterConfig;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
@@ -50,7 +58,8 @@ CAN_RxHeaderTypeDef RxHeader;
 uint32_t TxMailbox;
 uint8_t TxData[8];
 uint8_t RxData[8];
-
+/* CAN Peripheral Data Struct Setup End */
+/* CAN Peripheral Messages Start */
 const uint32_t HoldMessage = 0x01;
 
 const uint32_t RetractionMessage = 0x02;
@@ -64,7 +73,7 @@ const uint32_t BoatTailStdId = 0x01;
 const uint32_t BoatTailExtId = 0x00;
 
 const uint32_t Held = 0x11;
-
+/* CAN Peripheral Messages End */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,20 +119,23 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
-
-	if (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK) {
-		Error_Handler();
-	}
-
-	if (HAL_CAN_Start(&hcan1) != HAL_OK) {
-		Error_Handler();
-	}
-
-	if (HAL_CAN_ActivateNotification(&hcan1,
-			(CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY))
-			!= HAL_OK) {
-		Error_Handler();
-	}
+	/* CAN Peripheral Filter Setup Start */
+		if (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK) {
+			Error_Handler();
+		}
+		/* CAN Peripheral Filter Setup End */
+		/* CAN Peripheral Activation Start */
+		if (HAL_CAN_Start(&hcan1) != HAL_OK) {
+			Error_Handler();
+		}
+		/* CAN Peripheral Activation End */
+		/* CAN Peripheral Notification Activation Start */
+		if (HAL_CAN_ActivateNotification(&hcan1,
+				(CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY))
+				!= HAL_OK) {
+			Error_Handler();
+		}
+		/* CAN Peripheral Notification Activation End */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -242,6 +254,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
@@ -253,9 +266,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
+/* CAN Peripheral Receive Message Override Start */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 
 	if( HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK ){
@@ -278,7 +302,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 	}
 }
-
+/* CAN Peripheral Receive Message Override End */
+/* CAN Peripheral Transfer Message Setup Start */
 void Tx_Data_Setup(const uint32_t stdId, const uint32_t extId, const uint8_t message){
 	  TxHeader.StdId = stdId;
 	  TxHeader.ExtId = extId;
@@ -289,7 +314,7 @@ void Tx_Data_Setup(const uint32_t stdId, const uint32_t extId, const uint8_t mes
 
 	  TxData[0] = message;
 }
-
+/* CAN Peripheral Transfer Message Setup End */
 /* USER CODE END 4 */
 
 /**
@@ -299,7 +324,7 @@ void Tx_Data_Setup(const uint32_t stdId, const uint32_t extId, const uint8_t mes
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+  /* Restarts the microcontroller */
 	NVIC_SystemReset();
   /* USER CODE END Error_Handler_Debug */
 }
