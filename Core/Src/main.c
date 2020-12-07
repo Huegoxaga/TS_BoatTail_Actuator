@@ -52,27 +52,27 @@ CAN_HandleTypeDef hcan1;
 /* USER CODE BEGIN PV */
 /* CAN Peripheral Data Struct Setup Start */
 CAN_FilterTypeDef sFilterConfig;
-CAN_TxHeaderTypeDef TxHeader;
-CAN_RxHeaderTypeDef RxHeader;
+CAN_TxHeaderTypeDef txHeader;
+CAN_RxHeaderTypeDef rxHeader;
 
-uint32_t TxMailbox;
-uint8_t TxData[8];
-uint8_t RxData[8];
+uint32_t txMailbox;
+uint8_t txData[8];
+uint8_t rxData[8];
 /* CAN Peripheral Data Struct Setup End */
 /* CAN Peripheral Messages Start */
-const uint32_t HoldMessage = 0x01;
+const uint32_t holdMessage = 0x01;
 
-const uint32_t RetractionMessage = 0x02;
+const uint32_t retractionMessage = 0x02;
 
-const uint32_t ExtensionMessage = 0x03;
+const uint32_t extensionMessage = 0x03;
 
-const uint32_t MasterStdId = 0x03;
-const uint32_t MasterExtId = 0x00;
+const uint32_t masterStdId = 0x03;
+const uint32_t masterExtId = 0x00;
 
-const uint32_t BoatTailStdId = 0x01;
-const uint32_t BoatTailExtId = 0x00;
+const uint32_t boatTailStdId = 0x01;
+const uint32_t boatTailExtId = 0x00;
 
-const uint32_t Held = 0x11;
+const uint32_t heldMessage = 0x11;
 /* CAN Peripheral Messages End */
 /* USER CODE END PV */
 
@@ -282,7 +282,7 @@ static void MX_GPIO_Init(void)
 /* CAN Peripheral Receive Message Override Start */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 
-	if( HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK ){
+	if( HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) != HAL_OK ){
 		Error_Handler();
 	}
 
@@ -290,29 +290,29 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 	/* Display LEDx */
 
-	if ((RxHeader.StdId == BoatTailStdId || RxHeader.StdId == MasterStdId)
-			&& (RxHeader.IDE == CAN_ID_STD)
-			&& (RxData[0] == RetractionMessage)) {
+	if ((rxHeader.StdId == boatTailStdId || rxHeader.StdId == masterStdId)
+			&& (rxHeader.IDE == CAN_ID_STD)
+			&& (rxData[0] == retractionMessage)) {
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 
 	}
-	else if ((RxHeader.StdId == BoatTailStdId || RxHeader.StdId == MasterStdId)
-			&& (RxHeader.IDE == CAN_ID_STD)
-			&& (RxData[0] == ExtensionMessage)) {
+	else if ((rxHeader.StdId == boatTailStdId || rxHeader.StdId == masterStdId)
+			&& (rxHeader.IDE == CAN_ID_STD)
+			&& (rxData[0] == extensionMessage)) {
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 	}
 }
 /* CAN Peripheral Receive Message Override End */
 /* CAN Peripheral Transfer Message Setup Start */
 void Tx_Data_Setup(const uint32_t stdId, const uint32_t extId, const uint8_t message){
-	  TxHeader.StdId = stdId;
-	  TxHeader.ExtId = extId;
-	  TxHeader.RTR = CAN_RTR_DATA;
-	  TxHeader.IDE = CAN_ID_STD;
-	  TxHeader.DLC = 8;
-	  TxHeader.TransmitGlobalTime = DISABLE;
+	  txHeader.StdId = stdId;
+	  txHeader.ExtId = extId;
+	  txHeader.RTR = CAN_RTR_DATA;
+	  txHeader.IDE = CAN_ID_STD;
+	  txHeader.DLC = 8;
+	  txHeader.TransmitGlobalTime = DISABLE;
 
-	  TxData[0] = message;
+	  txData[0] = message;
 }
 /* CAN Peripheral Transfer Message Setup End */
 /* USER CODE END 4 */
